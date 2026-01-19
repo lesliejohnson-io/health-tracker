@@ -1,5 +1,4 @@
 import { Smile, Frown, Meh, SmilePlus, Activity, ChevronRight, Send } from 'lucide-react';
-import { useState, useEffect } from 'react';
 import { cn } from '../../utils/cn';
 
 interface CheckInScreenProps {
@@ -36,31 +35,41 @@ export const CheckInScreen = ({
   onCheckIn,
   onNavigate,
 }: CheckInScreenProps) => {
-  const [mood, setMood] = useState<MoodLevel | null>(checkInData.mood as MoodLevel | null);
-  const [energy, setEnergy] = useState<EnergyLevel | null>(checkInData.energy);
-  const [sleep, setSleep] = useState(checkInData.sleep);
-  const [otherWorkout, setOtherWorkout] = useState(checkInData.otherWorkout);
-  const [notes, setNotes] = useState(checkInData.notes);
-
-  // Restore state from props when switching back to this tab
-  useEffect(() => {
-    setMood(checkInData.mood as MoodLevel | null);
-    setEnergy(checkInData.energy);
-    setSleep(checkInData.sleep);
-    setOtherWorkout(checkInData.otherWorkout);
-    setNotes(checkInData.notes);
-  }, [checkInData]);
-
-  // Persist form data in real-time as user types/selects
-  useEffect(() => {
+  // Use props directly as the source of truth - no local state needed
+  const handleMoodChange = (newMood: MoodLevel) => {
     onUpdateCheckInData({
-      mood,
-      energy,
-      sleep,
-      otherWorkout,
-      notes,
+      ...checkInData,
+      mood: newMood,
     });
-  }, [mood, energy, sleep, otherWorkout, notes, onUpdateCheckInData]);
+  };
+
+  const handleEnergyChange = (newEnergy: EnergyLevel) => {
+    onUpdateCheckInData({
+      ...checkInData,
+      energy: newEnergy,
+    });
+  };
+
+  const handleSleepChange = (newSleep: string) => {
+    onUpdateCheckInData({
+      ...checkInData,
+      sleep: newSleep,
+    });
+  };
+
+  const handleOtherWorkoutChange = (newOtherWorkout: string) => {
+    onUpdateCheckInData({
+      ...checkInData,
+      otherWorkout: newOtherWorkout,
+    });
+  };
+
+  const handleNotesChange = (newNotes: string) => {
+    onUpdateCheckInData({
+      ...checkInData,
+      notes: newNotes,
+    });
+  };
 
   const moodIcons = [
     { value: 1, icon: Frown, label: 'Very Bad' },
@@ -90,10 +99,10 @@ export const CheckInScreen = ({
           {moodIcons.map(({ value, icon: Icon }) => (
             <button
               key={value}
-              onClick={() => setMood(value)}
+              onClick={() => handleMoodChange(value)}
               className={cn(
                 'aspect-square rounded-xl flex items-center justify-center transition-colors',
-                mood === value
+                checkInData.mood === value
                   ? 'bg-primary text-black'
                   : 'bg-card-hover hover:bg-border text-muted'
               )}
@@ -111,10 +120,10 @@ export const CheckInScreen = ({
           {energyLevels.map((level) => (
             <button
               key={level}
-              onClick={() => setEnergy(level)}
+              onClick={() => handleEnergyChange(level)}
               className={cn(
                 'py-3 px-4 rounded-xl font-medium transition-colors',
-                energy === level
+                checkInData.energy === level
                   ? 'bg-primary text-black'
                   : 'bg-card-hover hover:bg-border text-white'
               )}
@@ -131,8 +140,8 @@ export const CheckInScreen = ({
         <input
           type="number"
           step="0.5"
-          value={sleep}
-          onChange={(e) => setSleep(e.target.value)}
+          value={checkInData.sleep}
+          onChange={(e) => handleSleepChange(e.target.value)}
           placeholder="Enter hours"
           className="w-full bg-card-hover border border-border rounded-xl px-4 py-3 text-white placeholder-muted focus:outline-none focus:border-primary transition-colors"
         />
@@ -162,8 +171,8 @@ export const CheckInScreen = ({
         {/* Other Workout */}
         <input
           type="text"
-          value={otherWorkout}
-          onChange={(e) => setOtherWorkout(e.target.value)}
+          value={checkInData.otherWorkout}
+          onChange={(e) => handleOtherWorkoutChange(e.target.value)}
           placeholder="Other workout (yoga, boxing, etc.)"
           className="w-full bg-card-hover border border-border rounded-xl px-4 py-3 text-white placeholder-muted focus:outline-none focus:border-primary transition-colors"
         />
@@ -173,8 +182,8 @@ export const CheckInScreen = ({
       <div className="bg-card rounded-2xl p-6">
         <h3 className="font-semibold mb-4">Additional Notes</h3>
         <textarea
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
+          value={checkInData.notes}
+          onChange={(e) => handleNotesChange(e.target.value)}
           placeholder="How was your day? Any concerns?"
           rows={3}
           className="w-full bg-card-hover border border-border rounded-xl px-4 py-3 text-white placeholder-muted focus:outline-none focus:border-primary transition-colors resize-none"
