@@ -1,4 +1,4 @@
-import { Smile, Frown, Meh, SmilePlus, Activity, ChevronRight, Send } from 'lucide-react';
+import { Dumbbell, ChevronRight, Send } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
 interface CheckInScreenProps {
@@ -71,12 +71,12 @@ export const CheckInScreen = ({
     });
   };
 
-  const moodIcons = [
-    { value: 1, icon: Frown, label: 'Very Bad' },
-    { value: 2, icon: Frown, label: 'Bad' },
-    { value: 3, icon: Meh, label: 'Okay' },
-    { value: 4, icon: Smile, label: 'Good' },
-    { value: 5, icon: SmilePlus, label: 'Great' },
+  const moodEmojis = [
+    { value: 1, emoji: '😭', label: 'Very Bad' },
+    { value: 2, emoji: '😔', label: 'Bad' },
+    { value: 3, emoji: '😐', label: 'Okay' },
+    { value: 4, emoji: '😊', label: 'Good' },
+    { value: 5, emoji: '🤩', label: 'Great' },
   ] as const;
 
   const energyLevels: EnergyLevel[] = ['Low', 'Medium', 'High'];
@@ -96,18 +96,20 @@ export const CheckInScreen = ({
       <div className="bg-card rounded-2xl p-6">
         <h3 className="font-semibold mb-4">Mood</h3>
         <div className="grid grid-cols-5 gap-2">
-          {moodIcons.map(({ value, icon: Icon }) => (
+          {moodEmojis.map(({ value, emoji }) => (
             <button
               key={value}
               onClick={() => handleMoodChange(value)}
               className={cn(
-                'aspect-square rounded-xl flex items-center justify-center transition-colors',
+                'aspect-square rounded-xl flex items-center justify-center transition-all transform hover:scale-105',
                 checkInData.mood === value
-                  ? 'bg-primary text-black'
-                  : 'bg-card-hover hover:bg-border text-muted'
+                  ? 'bg-primary scale-110'
+                  : 'bg-card-hover hover:bg-border'
               )}
             >
-              <Icon className="w-6 h-6" />
+              <span className="text-3xl" role="img" aria-label={`Mood ${value}`}>
+                {emoji}
+              </span>
             </button>
           ))}
         </div>
@@ -150,7 +152,7 @@ export const CheckInScreen = ({
       {/* Today's Workout */}
       <div className="bg-card rounded-2xl p-6">
         <div className="flex items-center gap-2 mb-4">
-          <Activity className="w-5 h-5 text-primary" />
+          <Dumbbell className="w-5 h-5 text-orange-500" />
           <h3 className="font-semibold">Today's Workout</h3>
         </div>
 
@@ -195,11 +197,11 @@ export const CheckInScreen = ({
         <h3 className="font-semibold mb-4">Today's Progress</h3>
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-card-hover rounded-xl p-4 text-center">
-            <div className="text-3xl font-bold text-primary mb-1">{proteinTotal}g</div>
+            <div className="text-3xl font-bold text-green-400 mb-1">{proteinTotal}g</div>
             <div className="text-sm text-muted">Protein</div>
           </div>
           <div className="bg-card-hover rounded-xl p-4 text-center">
-            <div className="text-3xl font-bold text-orange-500 mb-1">{waterTotal}oz</div>
+            <div className="text-3xl font-bold text-blue-400 mb-1">{waterTotal}oz</div>
             <div className="text-sm text-muted">Water</div>
           </div>
         </div>
