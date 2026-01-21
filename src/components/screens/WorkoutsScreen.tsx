@@ -232,6 +232,14 @@ export const WorkoutsScreen = ({ onWorkoutComplete, onUpdateWorkoutLog, lastWork
           </div>
         )}
 
+        {/* Completed Time Display (when workout completed today) */}
+        {!isWorkoutActive && isTodayWorkout && todayWorkoutLog && (
+          <div className="bg-green-500/10 rounded-xl p-4 text-center border border-green-500/30">
+            <p className="text-sm text-muted mb-1">Workout Completed</p>
+            <p className="text-3xl font-bold text-green-400 font-mono">{formatTime(todayWorkoutLog.elapsedSeconds)}</p>
+          </div>
+        )}
+
         {/* Progress */}
         <div className="flex items-center justify-between text-sm">
           <span className="text-muted">Exercises</span>
