@@ -1,15 +1,112 @@
-import { Dumbbell, Clock, Flame } from 'lucide-react';
-import { useState } from 'react';
+import { Dumbbell, Clock, Flame, Play, Square } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 import { workouts } from '../../data/workouts';
 import { cn } from '../../utils/cn';
 
-interface WorkoutsScreenProps {
-  onWorkoutComplete: (day: string, duration: string) => void;
+export interface ExerciseLog {
+  exerciseId: string;
+  exerciseName: string;
+  weight: number | null;
 }
 
-export const WorkoutsScreen = ({ onWorkoutComplete }: WorkoutsScreenProps) => {
+export interface WorkoutLog {
+  day: string;
+  duration: string;
+  elapsedSeconds: number;
+  exercises: ExerciseLog[];
+  completedAt: string;
+}
+
+interface WorkoutsScreenProps {
+  onWorkoutComplete: (log: WorkoutLog) => void;
+  lastWorkoutLogs: WorkoutLog[];
+}
+
+const formatTime = (seconds: number): string => {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+};
+
+export const WorkoutsScreen = ({ onWorkoutComplete, lastWorkoutLogs }: WorkoutsScreenProps) => {
   const [selectedDay, setSelectedDay] = useState(0);
+  const [isWorkoutActive, setIsWorkoutActive] = useState(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [weights, setWeights] = useState<Record<string, string>>({});
+  const timerRef = useRef<number | null>(null);
+
   const currentWorkout = workouts[selectedDay];
+
+  // Find last log for current workout type
+  const lastLog = lastWorkoutLogs.find(log => log.day === currentWorkout.day);
+  const lastWeights: Record<string, number> = {};
+  if (lastLog) {
+    lastLog.exercises.forEach(ex => {
+      if (ex.weight !== null) {
+        lastWeights[ex.exerciseId] = ex.weight;
+      }
+    });
+  }
+
+  // Timer effect
+  useEffect(() => {
+    if (isWorkoutActive) {
+      timerRef.current = window.setInterval(() => {
+        setElapsedSeconds(prev => prev + 1);
+      }, 1000);
+    } else if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, [isWorkoutActive]);
+
+  const handleStartWorkout = () => {
+    setIsWorkoutActive(true);
+    setElapsedSeconds(0);
+    setWeights({});
+  };
+
+  const handleEndWorkout = () => {
+    setIsWorkoutActive(false);
+
+    // Collect all exercise data
+    const exercises: ExerciseLog[] = [];
+    currentWorkout.sections.forEach(section => {
+      section.exercises.forEach(exercise => {
+        const weightValue = weights[exercise.id];
+        exercises.push({
+          exerciseId: exercise.id,
+          exerciseName: exercise.name,
+          weight: weightValue ? parseFloat(weightValue) : null,
+        });
+      });
+    });
+
+    const log: WorkoutLog = {
+      day: currentWorkout.day,
+      duration: currentWorkout.duration,
+      elapsedSeconds,
+      exercises,
+      completedAt: new Date().toISOString(),
+    };
+
+    onWorkoutComplete(log);
+    setElapsedSeconds(0);
+    setWeights({});
+  };
+
+  const handleWeightChange = (exerciseId: string, value: string) => {
+    // Only allow numbers and decimal point
+    if (value === '' || /^\d*\.?\d*$/.test(value)) {
+      setWeights(prev => ({ ...prev, [exerciseId]: value }));
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -23,12 +120,14 @@ export const WorkoutsScreen = ({ onWorkoutComplete }: WorkoutsScreenProps) => {
         {workouts.map((workout, index) => (
           <button
             key={workout.day}
-            onClick={() => setSelectedDay(index)}
+            onClick={() => !isWorkoutActive && setSelectedDay(index)}
+            disabled={isWorkoutActive}
             className={cn(
               'py-3 px-4 rounded-xl font-medium transition-colors',
               selectedDay === index
                 ? 'bg-primary text-black'
-                : 'bg-card hover:bg-card-hover text-white'
+                : 'bg-card hover:bg-card-hover text-white',
+              isWorkoutActive && selectedDay !== index && 'opacity-50 cursor-not-allowed'
             )}
           >
             {workout.day}
@@ -57,10 +156,18 @@ export const WorkoutsScreen = ({ onWorkoutComplete }: WorkoutsScreenProps) => {
           </div>
         </div>
 
+        {/* Timer Display (when active) */}
+        {isWorkoutActive && (
+          <div className="bg-primary/10 rounded-xl p-4 text-center">
+            <p className="text-sm text-muted mb-1">Elapsed Time</p>
+            <p className="text-3xl font-bold text-primary font-mono">{formatTime(elapsedSeconds)}</p>
+          </div>
+        )}
+
         {/* Progress */}
         <div className="flex items-center justify-between text-sm">
-          <span className="text-muted">Progress</span>
-          <span className="font-medium">0/{currentWorkout.sections.reduce((acc, s) => acc + s.exercises.length, 0)}</span>
+          <span className="text-muted">Exercises</span>
+          <span className="font-medium">{currentWorkout.sections.reduce((acc, s) => acc + s.exercises.length, 0)} total</span>
         </div>
       </div>
 
@@ -75,7 +182,7 @@ export const WorkoutsScreen = ({ onWorkoutComplete }: WorkoutsScreenProps) => {
               {section.exercises.map((exercise, exerciseIndex) => (
                 <div
                   key={exercise.id}
-                  className="bg-card hover:bg-card-hover rounded-xl p-4 transition-colors cursor-pointer"
+                  className="bg-card rounded-xl p-4 transition-colors"
                 >
                   <div className="flex items-start gap-4">
                     <div className="w-8 h-8 bg-card-hover rounded-lg flex items-center justify-center flex-shrink-0 text-muted font-medium">
@@ -88,6 +195,28 @@ export const WorkoutsScreen = ({ onWorkoutComplete }: WorkoutsScreenProps) => {
                         {exercise.reps && ` × ${exercise.reps}`}
                         {exercise.rest && ` • ${exercise.rest}`}
                       </p>
+
+                      {/* Weight Input (only show when workout is active) */}
+                      {isWorkoutActive && (
+                        <div className="mt-3 flex items-center gap-3">
+                          {lastWeights[exercise.id] !== undefined && (
+                            <span className="text-sm text-muted">
+                              Last: <span className="text-primary font-medium">{lastWeights[exercise.id]} lbs</span>
+                            </span>
+                          )}
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              inputMode="decimal"
+                              placeholder="Weight"
+                              value={weights[exercise.id] || ''}
+                              onChange={(e) => handleWeightChange(exercise.id, e.target.value)}
+                              className="w-20 bg-background border border-border rounded-lg px-3 py-2 text-sm text-white placeholder-muted focus:outline-none focus:border-primary"
+                            />
+                            <span className="text-sm text-muted">lbs</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -97,13 +226,24 @@ export const WorkoutsScreen = ({ onWorkoutComplete }: WorkoutsScreenProps) => {
         ))}
       </div>
 
-      {/* Start Workout Button */}
-      <button
-        onClick={() => onWorkoutComplete(currentWorkout.day, currentWorkout.duration)}
-        className="w-full bg-primary hover:bg-primary-dark text-black py-4 rounded-xl font-semibold transition-colors"
-      >
-        Start Workout
-      </button>
+      {/* Start/End Workout Button */}
+      {isWorkoutActive ? (
+        <button
+          onClick={handleEndWorkout}
+          className="w-full bg-red-500 hover:bg-red-600 text-white py-4 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
+        >
+          <Square className="w-5 h-5" />
+          End Workout
+        </button>
+      ) : (
+        <button
+          onClick={handleStartWorkout}
+          className="w-full bg-primary hover:bg-primary-dark text-black py-4 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
+        >
+          <Play className="w-5 h-5" />
+          Start Workout
+        </button>
+      )}
     </div>
   );
 };

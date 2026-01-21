@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Toaster, toast } from 'sonner';
 import { BottomNav } from './components/BottomNav';
 import { CheckInScreen } from './components/screens/CheckInScreen';
-import { WorkoutsScreen } from './components/screens/WorkoutsScreen';
+import { WorkoutsScreen, type WorkoutLog } from './components/screens/WorkoutsScreen';
 import { ProteinScreen } from './components/screens/ProteinScreen';
 import { WaterScreen } from './components/screens/WaterScreen';
 import { HistoryScreen } from './components/screens/HistoryScreen';
@@ -19,6 +19,7 @@ interface DailyData {
   sleep: string;
   otherWorkout: string;
   notes: string;
+  workoutLog?: WorkoutLog;
 }
 
 const getEmptyDailyData = (): DailyData => ({
@@ -41,6 +42,7 @@ function App() {
     getEmptyDailyData()
   );
   const [history, setHistory] = useLocalStorage<DailyData[]>('healthCoach_history', []);
+  const [workoutLogs, setWorkoutLogs] = useLocalStorage<WorkoutLog[]>('healthCoach_workoutLogs', []);
 
   // Save to history and reset daily data if it's a new day
   useEffect(() => {
@@ -97,9 +99,23 @@ function App() {
     toast.success('Check-in complete!');
   }, [setDailyData]);
 
-  const handleWorkoutComplete = (day: string, duration: string) => {
-    setDailyData((prev) => ({ ...prev, completedWorkout: { day, duration } }));
-    toast.success(`Workout logged: ${day}`);
+  const handleWorkoutComplete = (log: WorkoutLog) => {
+    setDailyData((prev) => ({
+      ...prev,
+      completedWorkout: { day: log.day, duration: log.duration },
+      workoutLog: log
+    }));
+
+    // Save to workout logs (keep last 30 logs per workout type)
+    setWorkoutLogs((prev) => {
+      const updated = [...prev, log];
+      // Keep only the most recent logs (max 90 total to cover ~30 per workout type)
+      return updated.slice(-90);
+    });
+
+    const mins = Math.floor(log.elapsedSeconds / 60);
+    const secs = log.elapsedSeconds % 60;
+    toast.success(`${log.day} completed in ${mins}:${secs.toString().padStart(2, '0')}`);
   };
 
   const renderScreen = () => {
@@ -123,7 +139,7 @@ function App() {
           />
         );
       case 'workouts':
-        return <WorkoutsScreen onWorkoutComplete={handleWorkoutComplete} />;
+        return <WorkoutsScreen onWorkoutComplete={handleWorkoutComplete} lastWorkoutLogs={workoutLogs} />;
       case 'protein':
         return <ProteinScreen total={dailyData.proteinTotal} onAdd={handleAddProtein} />;
       case 'water':
