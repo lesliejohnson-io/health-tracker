@@ -125,7 +125,10 @@ function App() {
           <CheckInScreen
             proteinTotal={dailyData.proteinTotal}
             waterTotal={dailyData.waterTotal}
-            completedWorkout={dailyData.completedWorkout}
+            completedWorkout={dailyData.completedWorkout ? {
+              ...dailyData.completedWorkout,
+              completedAt: dailyData.workoutLog?.completedAt
+            } : null}
             checkInData={{
               mood: dailyData.mood,
               energy: dailyData.energy,
@@ -139,7 +142,7 @@ function App() {
           />
         );
       case 'workouts':
-        return <WorkoutsScreen onWorkoutComplete={handleWorkoutComplete} lastWorkoutLogs={workoutLogs} />;
+        return <WorkoutsScreen onWorkoutComplete={handleWorkoutComplete} lastWorkoutLogs={workoutLogs} todayWorkoutLog={dailyData.workoutLog} />;
       case 'protein':
         return <ProteinScreen total={dailyData.proteinTotal} onAdd={handleAddProtein} />;
       case 'water':

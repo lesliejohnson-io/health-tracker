@@ -20,6 +20,7 @@ export interface WorkoutLog {
 interface WorkoutsScreenProps {
   onWorkoutComplete: (log: WorkoutLog) => void;
   lastWorkoutLogs: WorkoutLog[];
+  todayWorkoutLog?: WorkoutLog;
 }
 
 const formatTime = (seconds: number): string => {
@@ -28,8 +29,17 @@ const formatTime = (seconds: number): string => {
   return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 };
 
-export const WorkoutsScreen = ({ onWorkoutComplete, lastWorkoutLogs }: WorkoutsScreenProps) => {
-  const [selectedDay, setSelectedDay] = useState(0);
+export const WorkoutsScreen = ({ onWorkoutComplete, lastWorkoutLogs, todayWorkoutLog }: WorkoutsScreenProps) => {
+  // Auto-select the workout day if one was completed today
+  const getInitialDay = () => {
+    if (todayWorkoutLog) {
+      const index = workouts.findIndex(w => w.day === todayWorkoutLog.day);
+      return index >= 0 ? index : 0;
+    }
+    return 0;
+  };
+
+  const [selectedDay, setSelectedDay] = useState(getInitialDay);
   const [isWorkoutActive, setIsWorkoutActive] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [weights, setWeights] = useState<Record<string, string>>({});
@@ -37,8 +47,21 @@ export const WorkoutsScreen = ({ onWorkoutComplete, lastWorkoutLogs }: WorkoutsS
 
   const currentWorkout = workouts[selectedDay];
 
-  // Find last log for current workout type
-  const lastLog = lastWorkoutLogs.find(log => log.day === currentWorkout.day);
+  // Check if current workout was completed today
+  const isTodayWorkout = todayWorkoutLog?.day === currentWorkout.day;
+
+  // Get today's weights for display
+  const todayWeights: Record<string, number> = {};
+  if (isTodayWorkout && todayWorkoutLog) {
+    todayWorkoutLog.exercises.forEach(ex => {
+      if (ex.weight !== null) {
+        todayWeights[ex.exerciseId] = ex.weight;
+      }
+    });
+  }
+
+  // Find last log for current workout type (excluding today's)
+  const lastLog = lastWorkoutLogs.find(log => log.day === currentWorkout.day && log.completedAt !== todayWorkoutLog?.completedAt);
   const lastWeights: Record<string, number> = {};
   if (lastLog) {
     lastLog.exercises.forEach(ex => {
@@ -69,7 +92,18 @@ export const WorkoutsScreen = ({ onWorkoutComplete, lastWorkoutLogs }: WorkoutsS
   const handleStartWorkout = () => {
     setIsWorkoutActive(true);
     setElapsedSeconds(0);
-    setWeights({});
+    // Prefill weights from today's completed workout if exists
+    if (isTodayWorkout && todayWorkoutLog) {
+      const prefilled: Record<string, string> = {};
+      todayWorkoutLog.exercises.forEach(ex => {
+        if (ex.weight !== null) {
+          prefilled[ex.exerciseId] = ex.weight.toString();
+        }
+      });
+      setWeights(prefilled);
+    } else {
+      setWeights({});
+    }
   };
 
   const handleEndWorkout = () => {
@@ -196,7 +230,7 @@ export const WorkoutsScreen = ({ onWorkoutComplete, lastWorkoutLogs }: WorkoutsS
                         {exercise.rest && ` • ${exercise.rest}`}
                       </p>
 
-                      {/* Weight Input (only show when workout is active) */}
+                      {/* Weight Input (when workout is active) */}
                       {isWorkoutActive && (
                         <div className="mt-3 flex items-center gap-3">
                           {lastWeights[exercise.id] !== undefined && (
@@ -215,6 +249,15 @@ export const WorkoutsScreen = ({ onWorkoutComplete, lastWorkoutLogs }: WorkoutsS
                             />
                             <span className="text-sm text-muted">lbs</span>
                           </div>
+                        </div>
+                      )}
+
+                      {/* Display today's logged weight (when not active) */}
+                      {!isWorkoutActive && isTodayWorkout && todayWeights[exercise.id] !== undefined && (
+                        <div className="mt-2">
+                          <span className="text-sm text-green-400 font-medium">
+                            Today: {todayWeights[exercise.id]} lbs
+                          </span>
                         </div>
                       )}
                     </div>

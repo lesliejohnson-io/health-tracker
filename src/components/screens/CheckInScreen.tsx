@@ -1,10 +1,10 @@
-import { Dumbbell, ChevronRight, Send } from 'lucide-react';
+import { Dumbbell, ChevronRight, Send, Check } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
 interface CheckInScreenProps {
   proteinTotal: number;
   waterTotal: number;
-  completedWorkout: { day: string; duration: string } | null;
+  completedWorkout: { day: string; duration: string; completedAt?: string } | null;
   checkInData: {
     mood: number | null;
     energy: 'Low' | 'Medium' | 'High' | null;
@@ -26,10 +26,15 @@ interface CheckInScreenProps {
 type MoodLevel = 1 | 2 | 3 | 4 | 5;
 type EnergyLevel = 'Low' | 'Medium' | 'High';
 
+const formatCompletionTime = (isoString: string): string => {
+  const date = new Date(isoString);
+  return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+};
+
 export const CheckInScreen = ({
   proteinTotal,
   waterTotal,
-  completedWorkout: _completedWorkout,
+  completedWorkout,
   checkInData,
   onUpdateCheckInData,
   onCheckIn,
@@ -159,12 +164,29 @@ export const CheckInScreen = ({
         {/* Weight Training Workouts */}
         <button
           onClick={() => onNavigate('workouts')}
-          className="w-full bg-card-hover hover:bg-border rounded-xl p-4 mb-3 transition-colors text-left"
+          className={cn(
+            'w-full rounded-xl p-4 mb-3 transition-colors text-left',
+            completedWorkout
+              ? 'bg-green-500/20 hover:bg-green-500/30 border border-green-500/30'
+              : 'bg-card-hover hover:bg-border'
+          )}
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Weight Training Workouts</p>
-              <p className="text-sm text-muted">Track your sets and weights</p>
+              {completedWorkout ? (
+                <>
+                  <p className="font-medium text-green-400 flex items-center gap-2">
+                    <Check className="w-4 h-4" />
+                    {completedWorkout.day} completed{completedWorkout.completedAt && ` at ${formatCompletionTime(completedWorkout.completedAt)}`}
+                  </p>
+                  <p className="text-sm text-muted">Tap to view or edit weights</p>
+                </>
+              ) : (
+                <>
+                  <p className="font-medium">Weight Training Workouts</p>
+                  <p className="text-sm text-muted">Track your sets and weights</p>
+                </>
+              )}
             </div>
             <ChevronRight className="w-5 h-5 text-muted" />
           </div>
@@ -183,12 +205,12 @@ export const CheckInScreen = ({
       {/* Additional Notes */}
       <div className="bg-card rounded-2xl p-6">
         <h3 className="font-semibold mb-4">Additional Notes</h3>
-        <textarea
+        <input
+          type="text"
           value={checkInData.notes}
           onChange={(e) => handleNotesChange(e.target.value)}
           placeholder="How was your day? Any concerns?"
-          rows={3}
-          className="w-full bg-card-hover border border-border rounded-xl px-4 py-3 text-white placeholder-muted focus:outline-none focus:border-primary transition-colors resize-none"
+          className="w-full bg-card-hover border border-border rounded-xl px-4 py-3 text-white placeholder-muted focus:outline-none focus:border-primary transition-colors"
         />
       </div>
 
