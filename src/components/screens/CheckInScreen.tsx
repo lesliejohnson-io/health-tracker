@@ -1,5 +1,6 @@
 import { Dumbbell, ChevronRight, Send, Check } from 'lucide-react';
 import { cn } from '../../utils/cn';
+import { Logo } from '../Logo';
 
 interface CheckInScreenProps {
   proteinTotal: number;
@@ -93,6 +94,9 @@ export const CheckInScreen = ({
   return (
     <div className="space-y-6">
       <div className="text-center">
+        <div className="flex justify-center mb-3">
+          <Logo size={56} />
+        </div>
         <h1 className="text-3xl font-bold mb-2">Daily Check-in</h1>
         <p className="text-muted">How are you feeling today?</p>
       </div>
