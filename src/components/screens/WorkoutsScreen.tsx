@@ -1,4 +1,4 @@
-import { Dumbbell, Clock, Flame, Play, Square } from 'lucide-react';
+import { Dumbbell, Clock, Flame, Play, Square, Save } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { workouts } from '../../data/workouts';
 import { cn } from '../../utils/cn';
@@ -19,6 +19,7 @@ export interface WorkoutLog {
 
 interface WorkoutsScreenProps {
   onWorkoutComplete: (log: WorkoutLog) => void;
+  onUpdateWorkoutLog: (log: WorkoutLog) => void;
   lastWorkoutLogs: WorkoutLog[];
   todayWorkoutLog?: WorkoutLog;
 }
@@ -29,7 +30,7 @@ const formatTime = (seconds: number): string => {
   return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 };
 
-export const WorkoutsScreen = ({ onWorkoutComplete, lastWorkoutLogs, todayWorkoutLog }: WorkoutsScreenProps) => {
+export const WorkoutsScreen = ({ onWorkoutComplete, onUpdateWorkoutLog, lastWorkoutLogs, todayWorkoutLog }: WorkoutsScreenProps) => {
   // Auto-select the workout day if one was completed today
   const getInitialDay = () => {
     if (todayWorkoutLog) {
@@ -39,26 +40,31 @@ export const WorkoutsScreen = ({ onWorkoutComplete, lastWorkoutLogs, todayWorkou
     return 0;
   };
 
+  // Initialize weights from today's workout if it exists
+  const getInitialWeights = () => {
+    if (todayWorkoutLog) {
+      const initial: Record<string, string> = {};
+      todayWorkoutLog.exercises.forEach(ex => {
+        if (ex.weight !== null) {
+          initial[ex.exerciseId] = ex.weight.toString();
+        }
+      });
+      return initial;
+    }
+    return {};
+  };
+
   const [selectedDay, setSelectedDay] = useState(getInitialDay);
   const [isWorkoutActive, setIsWorkoutActive] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [weights, setWeights] = useState<Record<string, string>>({});
+  const [weights, setWeights] = useState<Record<string, string>>(getInitialWeights);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const timerRef = useRef<number | null>(null);
 
   const currentWorkout = workouts[selectedDay];
 
   // Check if current workout was completed today
   const isTodayWorkout = todayWorkoutLog?.day === currentWorkout.day;
-
-  // Get today's weights for display
-  const todayWeights: Record<string, number> = {};
-  if (isTodayWorkout && todayWorkoutLog) {
-    todayWorkoutLog.exercises.forEach(ex => {
-      if (ex.weight !== null) {
-        todayWeights[ex.exerciseId] = ex.weight;
-      }
-    });
-  }
 
   // Find last log for current workout type (excluding today's)
   const lastLog = lastWorkoutLogs.find(log => log.day === currentWorkout.day && log.completedAt !== todayWorkoutLog?.completedAt);
@@ -139,7 +145,35 @@ export const WorkoutsScreen = ({ onWorkoutComplete, lastWorkoutLogs, todayWorkou
     // Only allow numbers and decimal point
     if (value === '' || /^\d*\.?\d*$/.test(value)) {
       setWeights(prev => ({ ...prev, [exerciseId]: value }));
+      if (isTodayWorkout && !isWorkoutActive) {
+        setHasUnsavedChanges(true);
+      }
     }
+  };
+
+  const handleSaveWeights = () => {
+    if (!todayWorkoutLog) return;
+
+    // Collect updated exercise data
+    const exercises: ExerciseLog[] = [];
+    currentWorkout.sections.forEach(section => {
+      section.exercises.forEach(exercise => {
+        const weightValue = weights[exercise.id];
+        exercises.push({
+          exerciseId: exercise.id,
+          exerciseName: exercise.name,
+          weight: weightValue ? parseFloat(weightValue) : null,
+        });
+      });
+    });
+
+    const updatedLog: WorkoutLog = {
+      ...todayWorkoutLog,
+      exercises,
+    };
+
+    onUpdateWorkoutLog(updatedLog);
+    setHasUnsavedChanges(false);
   };
 
   return (
@@ -230,8 +264,8 @@ export const WorkoutsScreen = ({ onWorkoutComplete, lastWorkoutLogs, todayWorkou
                         {exercise.rest && ` • ${exercise.rest}`}
                       </p>
 
-                      {/* Weight Input (when workout is active) */}
-                      {isWorkoutActive && (
+                      {/* Weight Input (when workout is active or editing completed workout) */}
+                      {(isWorkoutActive || isTodayWorkout) && (
                         <div className="mt-3 flex items-center gap-3">
                           {lastWeights[exercise.id] !== undefined && (
                             <span className="text-sm text-muted">
@@ -251,15 +285,6 @@ export const WorkoutsScreen = ({ onWorkoutComplete, lastWorkoutLogs, todayWorkou
                           </div>
                         </div>
                       )}
-
-                      {/* Display today's logged weight (when not active) */}
-                      {!isWorkoutActive && isTodayWorkout && todayWeights[exercise.id] !== undefined && (
-                        <div className="mt-2">
-                          <span className="text-sm text-green-400 font-medium">
-                            Today: {todayWeights[exercise.id]} lbs
-                          </span>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -277,6 +302,14 @@ export const WorkoutsScreen = ({ onWorkoutComplete, lastWorkoutLogs, todayWorkou
         >
           <Square className="w-5 h-5" />
           End Workout
+        </button>
+      ) : hasUnsavedChanges ? (
+        <button
+          onClick={handleSaveWeights}
+          className="w-full bg-green-500 hover:bg-green-600 text-white py-4 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
+        >
+          <Save className="w-5 h-5" />
+          Save Changes
         </button>
       ) : (
         <button

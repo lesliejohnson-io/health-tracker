@@ -118,6 +118,26 @@ function App() {
     toast.success(`${log.day} completed in ${mins}:${secs.toString().padStart(2, '0')}`);
   };
 
+  const handleUpdateWorkoutLog = (log: WorkoutLog) => {
+    setDailyData((prev) => ({
+      ...prev,
+      workoutLog: log
+    }));
+
+    // Update the workout log in history
+    setWorkoutLogs((prev) => {
+      const index = prev.findIndex(l => l.completedAt === log.completedAt);
+      if (index >= 0) {
+        const updated = [...prev];
+        updated[index] = log;
+        return updated;
+      }
+      return prev;
+    });
+
+    toast.success('Weights updated');
+  };
+
   const renderScreen = () => {
     switch (activeTab) {
       case 'checkin':
@@ -142,7 +162,7 @@ function App() {
           />
         );
       case 'workouts':
-        return <WorkoutsScreen onWorkoutComplete={handleWorkoutComplete} lastWorkoutLogs={workoutLogs} todayWorkoutLog={dailyData.workoutLog} />;
+        return <WorkoutsScreen onWorkoutComplete={handleWorkoutComplete} onUpdateWorkoutLog={handleUpdateWorkoutLog} lastWorkoutLogs={workoutLogs} todayWorkoutLog={dailyData.workoutLog} />;
       case 'protein':
         return <ProteinScreen total={dailyData.proteinTotal} onAdd={handleAddProtein} />;
       case 'water':
