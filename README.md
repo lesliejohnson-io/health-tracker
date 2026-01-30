@@ -1,6 +1,6 @@
-# Health Tracker
+# Calibrate
 
-A mobile-first fitness and health tracking app built with React, TypeScript, and Tailwind CSS.
+A mobile-first health tracking app built with React, TypeScript, and Tailwind CSS.
 
 ## Features
 
