@@ -6,6 +6,7 @@ import { WorkoutsScreen, type WorkoutLog } from './components/screens/WorkoutsSc
 import { ProteinScreen } from './components/screens/ProteinScreen';
 import { WaterScreen } from './components/screens/WaterScreen';
 import { HistoryScreen } from './components/screens/HistoryScreen';
+import { SplashScreen } from './components/SplashScreen';
 import { useLocalStorage, getTodayKey } from './hooks/useLocalStorage';
 
 interface DailyData {
@@ -37,12 +38,19 @@ const getEmptyDailyData = (): DailyData => ({
 
 function App() {
   const [activeTab, setActiveTab] = useState('checkin');
+  const [showSplash, setShowSplash] = useState(true);
   const [dailyData, setDailyData] = useLocalStorage<DailyData>(
     'healthCoach_dailyData',
     getEmptyDailyData()
   );
   const [history, setHistory] = useLocalStorage<DailyData[]>('healthCoach_history', []);
   const [workoutLogs, setWorkoutLogs] = useLocalStorage<WorkoutLog[]>('healthCoach_workoutLogs', []);
+
+  // Initial splash screen
+  useEffect(() => {
+    const timer = setTimeout(() => setShowSplash(false), 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Save to history and reset daily data if it's a new day
   useEffect(() => {
@@ -84,19 +92,36 @@ function App() {
     otherWorkout: string;
     notes: string;
   }) => {
-    setDailyData((prev) => ({
-      ...prev,
-      mood: checkInData.mood,
-      energy: checkInData.energy,
-      sleep: checkInData.sleep,
-      otherWorkout: checkInData.otherWorkout,
-      notes: checkInData.notes,
-    }));
+    setDailyData((prev) => {
+      const updated = {
+        ...prev,
+        mood: checkInData.mood,
+        energy: checkInData.energy,
+        sleep: checkInData.sleep,
+        otherWorkout: checkInData.otherWorkout,
+        notes: checkInData.notes,
+      };
+      // Build completedWorkout to include both weight training and other workout
+      const hasWeightTraining = !!prev.workoutLog;
+      const hasOtherWorkout = !!checkInData.otherWorkout.trim();
+      if (hasWeightTraining && hasOtherWorkout) {
+        updated.completedWorkout = {
+          day: `${prev.completedWorkout?.day?.split(' + ')[0] || prev.workoutLog!.day} + ${checkInData.otherWorkout.trim()}`,
+          duration: prev.workoutLog!.duration,
+        };
+      } else if (hasOtherWorkout) {
+        updated.completedWorkout = { day: checkInData.otherWorkout.trim(), duration: '' };
+      } else if (!hasWeightTraining) {
+        updated.completedWorkout = null;
+      }
+      return updated;
+    });
   }, [setDailyData]);
 
   const handleCheckIn = useCallback(() => {
     setDailyData((prev) => ({ ...prev, checkedIn: true }));
     toast.success('Check-in complete!');
+    setShowSplash(true);
   }, [setDailyData]);
 
   const handleWorkoutComplete = (log: WorkoutLog) => {
@@ -181,6 +206,10 @@ function App() {
         return null;
     }
   };
+
+  if (showSplash) {
+    return <SplashScreen onFinish={() => setShowSplash(false)} />;
+  }
 
   return (
     <div className="min-h-screen bg-background">
