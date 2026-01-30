@@ -1,4 +1,4 @@
-# Calibrate
+# System Check
 
 A mobile-first health tracking app built with React, TypeScript, and Tailwind CSS.
 
