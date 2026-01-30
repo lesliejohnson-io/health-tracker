@@ -17,7 +17,7 @@ export const SplashScreen = ({ onFinish }: SplashScreenProps) => {
     >
       <div className="text-center animate-fade-in">
         <h1 className="text-6xl font-bold tracking-tight text-primary mb-3">
-          Calibrate
+          Systems Check
         </h1>
         <p className="text-muted text-lg">Track. Train. Transform.</p>
       </div>
