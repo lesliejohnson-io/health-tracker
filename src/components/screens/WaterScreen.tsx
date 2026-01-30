@@ -32,7 +32,7 @@ export const WaterScreen = ({ total, onAdd }: WaterScreenProps) => {
       {/* Water Card */}
       <div className="bg-card rounded-2xl p-6 space-y-6">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center">
+          <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center">
             <Droplet className="w-6 h-6 text-black" />
           </div>
           <div>
@@ -64,7 +64,7 @@ export const WaterScreen = ({ total, onAdd }: WaterScreenProps) => {
                 strokeWidth="12"
                 fill="none"
                 strokeLinecap="round"
-                className="text-orange-500 transition-all duration-500"
+                className="text-accent transition-all duration-500"
                 style={{
                   strokeDasharray: `${2 * Math.PI * 88}`,
                   strokeDashoffset: `${2 * Math.PI * 88 * (1 - percentage / 100)}`,
