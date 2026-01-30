@@ -76,8 +76,8 @@ export const HistoryScreen = ({ history }: HistoryScreenProps) => {
 
                 {/* Water */}
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-orange-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Droplet className="w-4 h-4 text-orange-500" />
+                  <div className="w-8 h-8 bg-accent/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Droplet className="w-4 h-4 text-accent" />
                   </div>
                   <div>
                     <div className="text-sm font-semibold">{day.waterTotal}oz</div>

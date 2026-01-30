@@ -157,7 +157,7 @@ export const CheckInScreen = ({
       {/* Today's Workout */}
       <div className="bg-card rounded-2xl p-6">
         <div className="flex items-center gap-2 mb-4">
-          <Dumbbell className="w-5 h-5 text-orange-500" />
+          <Dumbbell className="w-5 h-5 text-accent" />
           <h3 className="font-semibold">Today's Workout</h3>
         </div>
 
@@ -167,7 +167,7 @@ export const CheckInScreen = ({
           className={cn(
             'w-full rounded-xl p-4 mb-3 transition-colors text-left',
             completedWorkout
-              ? 'bg-green-500/20 hover:bg-green-500/30 border border-green-500/30'
+              ? 'bg-success/20 hover:bg-success/30 border border-success/30'
               : 'bg-card-hover hover:bg-border'
           )}
         >
@@ -175,7 +175,7 @@ export const CheckInScreen = ({
             <div>
               {completedWorkout ? (
                 <>
-                  <p className="font-medium text-green-400 flex items-center gap-2">
+                  <p className="font-medium text-success flex items-center gap-2">
                     <Check className="w-4 h-4" />
                     {completedWorkout.day} completed{completedWorkout.completedAt && ` at ${formatCompletionTime(completedWorkout.completedAt)}`}
                   </p>
@@ -222,14 +222,14 @@ export const CheckInScreen = ({
             onClick={() => onNavigate('protein')}
             className="bg-card-hover hover:bg-border rounded-xl p-4 text-center transition-colors"
           >
-            <div className="text-3xl font-bold text-green-400 mb-1">{proteinTotal}g</div>
+            <div className="text-3xl font-bold text-success mb-1">{proteinTotal}g</div>
             <div className="text-sm text-muted">Protein</div>
           </button>
           <button
             onClick={() => onNavigate('water')}
             className="bg-card-hover hover:bg-border rounded-xl p-4 text-center transition-colors"
           >
-            <div className="text-3xl font-bold text-blue-400 mb-1">{waterTotal}oz</div>
+            <div className="text-3xl font-bold text-primary mb-1">{waterTotal}oz</div>
             <div className="text-sm text-muted">Water</div>
           </button>
         </div>

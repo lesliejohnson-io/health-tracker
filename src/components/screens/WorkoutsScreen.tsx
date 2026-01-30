@@ -234,8 +234,8 @@ export const WorkoutsScreen = ({ onWorkoutComplete, onUpdateWorkoutLog, lastWork
 
         {/* Completed Time Display (when workout completed today) */}
         {!isWorkoutActive && isTodayWorkout && todayWorkoutLog && (
-          <div className="bg-green-500/10 rounded-xl p-4 text-center border border-green-500/30">
-            <p className="text-3xl font-bold text-green-400">
+          <div className="bg-success/10 rounded-xl p-4 text-center border border-success/30">
+            <p className="text-3xl font-bold text-success">
               Completed: {Math.round(todayWorkoutLog.elapsedSeconds / 60)} mins
             </p>
           </div>
@@ -318,7 +318,7 @@ export const WorkoutsScreen = ({ onWorkoutComplete, onUpdateWorkoutLog, lastWork
       {isWorkoutActive && (
         <button
           onClick={handleEndWorkout}
-          className="w-full bg-red-500 hover:bg-red-600 text-white py-4 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
+          className="w-full bg-salmon hover:brightness-90 text-white py-4 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
         >
           <Square className="w-5 h-5" />
           End Workout
@@ -329,7 +329,7 @@ export const WorkoutsScreen = ({ onWorkoutComplete, onUpdateWorkoutLog, lastWork
       {hasUnsavedChanges && (
         <button
           onClick={handleSaveWeights}
-          className="w-full bg-green-500 hover:bg-green-600 text-white py-4 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
+          className="w-full bg-success hover:brightness-90 text-black py-4 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
         >
           <Save className="w-5 h-5" />
           Save Changes
