@@ -235,8 +235,9 @@ export const WorkoutsScreen = ({ onWorkoutComplete, onUpdateWorkoutLog, lastWork
         {/* Completed Time Display (when workout completed today) */}
         {!isWorkoutActive && isTodayWorkout && todayWorkoutLog && (
           <div className="bg-green-500/10 rounded-xl p-4 text-center border border-green-500/30">
-            <p className="text-sm text-muted mb-1">Workout Completed</p>
-            <p className="text-3xl font-bold text-green-400 font-mono">{formatTime(todayWorkoutLog.elapsedSeconds)}</p>
+            <p className="text-3xl font-bold text-green-400">
+              Completed: {Math.round(todayWorkoutLog.elapsedSeconds / 60)} mins
+            </p>
           </div>
         )}
 
@@ -246,6 +247,17 @@ export const WorkoutsScreen = ({ onWorkoutComplete, onUpdateWorkoutLog, lastWork
           <span className="font-medium">{currentWorkout.sections.reduce((acc, s) => acc + s.exercises.length, 0)} total</span>
         </div>
       </div>
+
+      {/* Start Workout Button (above exercises, hidden when active) */}
+      {!isWorkoutActive && !hasUnsavedChanges && (
+        <button
+          onClick={handleStartWorkout}
+          className="w-full bg-primary hover:bg-primary-dark text-black py-4 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
+        >
+          <Play className="w-5 h-5" />
+          Start Workout
+        </button>
+      )}
 
       {/* Exercise Sections */}
       <div className="space-y-6">
@@ -302,8 +314,8 @@ export const WorkoutsScreen = ({ onWorkoutComplete, onUpdateWorkoutLog, lastWork
         ))}
       </div>
 
-      {/* Start/End Workout Button */}
-      {isWorkoutActive ? (
+      {/* End Workout Button (bottom, only when active) */}
+      {isWorkoutActive && (
         <button
           onClick={handleEndWorkout}
           className="w-full bg-red-500 hover:bg-red-600 text-white py-4 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
@@ -311,21 +323,16 @@ export const WorkoutsScreen = ({ onWorkoutComplete, onUpdateWorkoutLog, lastWork
           <Square className="w-5 h-5" />
           End Workout
         </button>
-      ) : hasUnsavedChanges ? (
+      )}
+
+      {/* Save Changes Button (bottom, when editing completed workout) */}
+      {hasUnsavedChanges && (
         <button
           onClick={handleSaveWeights}
           className="w-full bg-green-500 hover:bg-green-600 text-white py-4 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
         >
           <Save className="w-5 h-5" />
           Save Changes
-        </button>
-      ) : (
-        <button
-          onClick={handleStartWorkout}
-          className="w-full bg-primary hover:bg-primary-dark text-black py-4 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
-        >
-          <Play className="w-5 h-5" />
-          Start Workout
         </button>
       )}
     </div>

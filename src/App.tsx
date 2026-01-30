@@ -84,14 +84,23 @@ function App() {
     otherWorkout: string;
     notes: string;
   }) => {
-    setDailyData((prev) => ({
-      ...prev,
-      mood: checkInData.mood,
-      energy: checkInData.energy,
-      sleep: checkInData.sleep,
-      otherWorkout: checkInData.otherWorkout,
-      notes: checkInData.notes,
-    }));
+    setDailyData((prev) => {
+      const updated = {
+        ...prev,
+        mood: checkInData.mood,
+        energy: checkInData.energy,
+        sleep: checkInData.sleep,
+        otherWorkout: checkInData.otherWorkout,
+        notes: checkInData.notes,
+      };
+      // Save other workout as a completed workout if entered and no weight training done
+      if (checkInData.otherWorkout.trim() && !prev.workoutLog) {
+        updated.completedWorkout = { day: checkInData.otherWorkout.trim(), duration: '' };
+      } else if (!checkInData.otherWorkout.trim() && !prev.workoutLog) {
+        updated.completedWorkout = null;
+      }
+      return updated;
+    });
   }, [setDailyData]);
 
   const handleCheckIn = useCallback(() => {

@@ -218,14 +218,20 @@ export const CheckInScreen = ({
       <div className="bg-card rounded-2xl p-6">
         <h3 className="font-semibold mb-4">Today's Progress</h3>
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-card-hover rounded-xl p-4 text-center">
+          <button
+            onClick={() => onNavigate('protein')}
+            className="bg-card-hover hover:bg-border rounded-xl p-4 text-center transition-colors"
+          >
             <div className="text-3xl font-bold text-green-400 mb-1">{proteinTotal}g</div>
             <div className="text-sm text-muted">Protein</div>
-          </div>
-          <div className="bg-card-hover rounded-xl p-4 text-center">
+          </button>
+          <button
+            onClick={() => onNavigate('water')}
+            className="bg-card-hover hover:bg-border rounded-xl p-4 text-center transition-colors"
+          >
             <div className="text-3xl font-bold text-blue-400 mb-1">{waterTotal}oz</div>
             <div className="text-sm text-muted">Water</div>
-          </div>
+          </button>
         </div>
       </div>
 
